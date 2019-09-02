@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.pdwu.easycloud.file.dao.ShareInfoDao">
+
+    <resultMap id="shareInfoMap" type="com.pdwu.easycloud.file.bean.ShareInfoBean">
+
+        <id column="share_id" property="shareId"/>
+        <result column="file_id" property="fileId"/>
+        <result column="user_id" property="userId"/>
+        <result column="status" property="status"/>
+        <result column="shortlink" property="shortlink"/>
+        <result column="create_time" property="createTime"/>
+        <result column="last_time" property="lastTime"/>
+
+        <association property="fileInfo" javaType="com.pdwu.easycloud.file.bean.FileInfoBean"
+                     resultMap="com.pdwu.easycloud.file.dao.FileInfoDao.fileInfoMap" columnPrefix="F_"/>
+
+    </resultMap>
+
+    <insert id="insertShareInfo" parameterType="com.pdwu.easycloud.file.bean.ShareInfoBean"
+            useGeneratedKeys="true" keyProperty="shareId">
+
+        INSERT INTO share_info (user_id, file_id, status, create_time, last_time)
+        VALUES (#{userId}, #{fileId}, #{status}, #{createTime}, #{lastTime})
+
+    </insert>
+
+    <select id="selectShareInfo" parameterType="map" resultMap="shareInfoMap">
+
+        SELECT
+        share_info.share_id,
+        share_info.user_id,
+        share_info.file_id,
+        share_info.status,
+        share_info.shortlink,
+        share_info.create_time,
+        share_info.last_time,
+        file_info.file_id as F_file_id,
+        file_info.user_id as F_user_id,
+        file_info.md5 as F_md5,
+        file_info.path as F_path,
+        file_info.name as F_name,
+        file_info.size as F_size,
+        file_info.status as F_status,
+        file_info.create_time as F_create_time,
+        file_info.last_time as F_last_time
+        FROM share_info
+        LEFT JOIN file_info ON share_info.file_id = file_info.file_id
+        <where>
+
+            <if test="userId != null">
+                share_info.user_id = #{userId}
+            </if>
+
+            <if test="fileId != null">
+                AND share_info.file_id = #{fileId}
+            </if>
+
+            <if test="shareId != null">
+                AND share_info.share_id = #{shareId}
+            </if>
+
+            <if test="status != null">
+                AND share_info.status = #{status}
+            </if>
+
+        </where>
+
+        <if test=" index != null">
+            LIMIT #{index},#{limit}
+        </if>
+
+    </select>
+
+    <update id="updateShareInfoStatus" parameterType="map">
+
+        UPDATE share_info
+        SET last_time = #{lastTime}, status = #{status}
+
+        <where>
+            share_id = #{shareId}
+        </where>
+
+    </update>
+
+    <update id="updateShareInfo" parameterType="map">
+
+        UPDATE share_info
+        <set>
+            last_time = #{lastTime}
+
+            <if test="shortlink != null">
+                , shortlink = #{shortlink}
+            </if>
+
+        </set>
+
+        <where>
+            share_id = #{shareId}
+        </where>
+
+    </update>
+
+    <delete id="delete" parameterType="map">
+
+        DELETE FROM share_info
+
+        <where>
+
+            <if test="shareId != null">
+                share_id = #{shareId}
+            </if>
+
+            <if test="fileId != null">
+                AND file_id = #{fileId}
+            </if>
+
+        </where>
+
+    </delete>
+
+    <select id="countShareList" parameterType="map" resultType="int">
+
+        SELECT count(*)
+        FROM share_info
+        <where>
+
+            <if test="userId != null">
+                share_info.user_id = #{userId}
+            </if>
+
+            <if test="status != null">
+                AND share_info.status = #{status}
+            </if>
+
+        </where>
+
+    </select>
+
+</mapper>
